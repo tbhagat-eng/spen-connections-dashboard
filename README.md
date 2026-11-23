@@ -44,10 +44,10 @@ A 4-page Power BI report built on SP Energy Networks' open **Embedded Capacity R
 ![Data model](screenshots/00_model.png)
 
 ## Reproduce it
-1. Register on the [SP Energy Networks Open Data Portal](https://spenergynetworks.opendatasoft.com) and export the *Embedded Capacity Register* as CSV.
-2. In Power BI Desktop, create the `FilePath` and `DataAsAt` parameters, then add the queries in `powerquery/` in number order (see `powerquery/00_README.md`).
-3. Build the model and measures from `dax/`.
-
+1. 1. Register on the [SP Energy Networks Open Data Portal](https://spenergynetworks.opendatasoft.com) and export the *Embedded Capacity Register* as CSV.
+2. Open `SPEN_Connections_Dashboard.pbit` in Power BI Desktop. When prompted, set **FilePath** to the CSV and **DataAsAt** to the download date. The report rebuilds itself.
+3. The M and DAX code is also in `powerquery/` and `dax/` for reading without Power BI.
+   
 ## Data and licence
 Data © SP Energy Networks, used under its Shared Data Licence terms. Raw data isn't redistributed in this repo.
 
