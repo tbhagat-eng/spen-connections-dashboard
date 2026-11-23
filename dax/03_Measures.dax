@@ -1,0 +1,53 @@
+-- Measures live in an empty _Measures table. Totals count each project once (IsPrimaryRecord);
+-- data quality measures look at every source row.
+
+-- ===================== VOLUME & CAPACITY =====================
+Total Sites = CALCULATE ( COUNTROWS ( Connections ), Connections[IsPrimaryRecord] = TRUE () )
+Total Capacity MW = CALCULATE ( SUM ( Connections[CapacityMW] ), Connections[IsPrimaryRecord] = TRUE () )
+Connected MW = CALCULATE ( [Total Capacity MW], Connections[StatusGroup] = "Connected" )
+Connected Sites = CALCULATE ( [Total Sites], Connections[StatusGroup] = "Connected" )
+Pipeline MW = CALCULATE ( [Total Capacity MW], Connections[StatusGroup] = "Accepted to connect" )
+Pipeline Sites = CALCULATE ( [Total Sites], Connections[StatusGroup] = "Accepted to connect" )
+Storage Share of Pipeline % = DIVIDE ( CALCULATE ( [Pipeline MW], DimTechnology[TechCategory] = "Storage" ), [Pipeline MW] )
+Low Carbon Share of Pipeline % = DIVIDE ( CALCULATE ( [Pipeline MW], DimTechnology[Group] IN { "Renewable", "Flexibility" } ), [Pipeline MW] )
+
+-- ===================== PROGRAMME / EXCEPTIONS =====================
+Data As At = MAX ( Connections[DataAsAt] )
+Overdue Sites = CALCULATE ( [Total Sites], Connections[IsOverdue] = TRUE () )
+Overdue MW = CALCULATE ( [Total Capacity MW], Connections[IsOverdue] = TRUE () )
+Overdue % of Pipeline = DIVIDE ( [Overdue Sites], [Pipeline Sites] )
+Avg Days Overdue = CALCULATE ( AVERAGE ( Connections[DaysOverdue] ), Connections[IsPrimaryRecord] = TRUE () )
+Avg Days Accepted to Target =
+CALCULATE ( AVERAGE ( Connections[DaysAcceptedToTarget] ), Connections[IsPrimaryRecord] = TRUE (), Connections[DaysAcceptedToTarget] >= 0 )
+
+Pipeline MW Due Next 12M =
+VAR AsAt = [Data As At]
+RETURN
+    CALCULATE (
+        [Pipeline MW],
+        Connections[TargetEnergisationDate] > AsAt,
+        Connections[TargetEnergisationDate] <= EDATE ( AsAt, 12 )
+    )
+
+Sites Accepted (by date accepted) = CALCULATE ( [Total Sites], USERELATIONSHIP ( Connections[DateAccepted], DimDate[Date] ) )
+MW Accepted (by date accepted) = CALCULATE ( [Total Capacity MW], USERELATIONSHIP ( Connections[DateAccepted], DimDate[Date] ) )
+MW Connected (by date connected) = CALCULATE ( [Connected MW], USERELATIONSHIP ( Connections[DateConnected], DimDate[Date] ) )
+
+-- ===================== DATA QUALITY =====================
+All Source Records = COUNTROWS ( Connections )
+Records Passing DQ = CALCULATE ( COUNTROWS ( Connections ), Connections[DQ_Pass] = TRUE () )
+DQ Score % = DIVIDE ( [Records Passing DQ], [All Source Records] )
+Records With Issues = [All Source Records] - [Records Passing DQ]
+DQ Issues = COALESCE ( COUNTROWS ( DQ_Issues ), 0 )
+DQ Issue Count (raw) = COUNTROWS ( DQ_Issues )   -- blank when no issue; used in the record-level exception table
+Rule Fail Rate % = DIVIDE ( [DQ Issues], [All Source Records] )
+
+-- ===================== DISPLAY LABELS (text, so cards show exact figures) =====================
+Title Overview = "Generation & storage connections, SP Energy Networks, data as at " & FORMAT ( [Data As At], "d mmm yyyy" )
+Overdue Headline =
+FORMAT ( [Overdue Sites], "#,0" ) & " accepted-to-connect projects (" & FORMAT ( [Overdue MW], "#,0" ) & " MW) are past their target energisation date"
+Connected MW (label) = FORMAT ( [Connected MW], "#,0" )
+Pipeline MW (label) = FORMAT ( [Pipeline MW], "#,0" )
+Overdue MW (label) = FORMAT ( [Overdue MW], "#,0" )
+Pipeline MW Due Next 12M (label) = FORMAT ( [Pipeline MW Due Next 12M], "#,0" )
+Avg Days Overdue (label) = FORMAT ( [Avg Days Overdue], "#,0" )

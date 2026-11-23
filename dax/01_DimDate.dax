@@ -1,0 +1,21 @@
+-- Modeling > New table. Paste everything below.
+-- CALENDARAUTO(3) builds full UK financial years (April-March), matching Ofgem regulatory years.
+DimDate =
+ADDCOLUMNS (
+    CALENDARAUTO ( 3 ),
+    "Year", YEAR ( [Date] ),
+    "Month", FORMAT ( [Date], "mmm yyyy" ),
+    "Month Sort", YEAR ( [Date] ) * 100 + MONTH ( [Date] ),
+    "Financial Year",
+        IF (
+            MONTH ( [Date] ) >= 4,
+            YEAR ( [Date] ) & "/" & RIGHT ( YEAR ( [Date] ) + 1, 2 ),
+            YEAR ( [Date] ) - 1 & "/" & RIGHT ( YEAR ( [Date] ), 2 )
+        ),
+    "FY Sort", IF ( MONTH ( [Date] ) >= 4, YEAR ( [Date] ), YEAR ( [Date] ) - 1 )
+)
+
+-- Then:
+-- 1. Table tools > Mark as date table > Date column = [Date]
+-- 2. Select [Month] > Column tools > Sort by column > Month Sort
+-- 3. Select [Financial Year] > Sort by column > FY Sort

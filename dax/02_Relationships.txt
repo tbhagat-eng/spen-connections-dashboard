@@ -1,0 +1,21 @@
+MODEL VIEW - create these relationships (drag field onto field). All: single direction, from the "1" side to the "*" side.
+
+ACTIVE
+  DimDate[Date]                    1 -> *  Connections[TargetEnergisationDate]
+  DimLicenceArea[LicenceAreaStd]   1 -> *  Connections[LicenceAreaStd]
+  DimTechnology[TechCategory]      1 -> *  Connections[TechCategory]
+  DimStatus[StatusGroup]           1 -> *  Connections[StatusGroup]
+  Connections[RowID]               1 -> *  DQ_Issues[RowID]
+  DQ_Rules[Rule]                   1 -> *  DQ_Issues[Rule]
+
+INACTIVE (dotted line - used by USERELATIONSHIP in measures)
+  DimDate[Date]                    1 -> *  Connections[DateAccepted]
+  DimDate[Date]                    1 -> *  Connections[DateConnected]
+
+
+Tidy-up (makes the model look professional to anyone opening the .pbix):
+  - Hide key columns in the fact table: Connections[LicenceAreaStd], [TechCategory], [StatusGroup], [RowID], [XYKey], [GSPKey]
+    (use the Dim tables' columns in visuals and slicers instead)
+  - Hide all DQ_ flag columns and RefCount
+  - Sort DimTechnology[TechCategory] by SortOrder, DimStatus[StatusGroup] by SortOrder
+  - Layout: DimDate, DimLicenceArea, DimTechnology, DimStatus around Connections = star schema.
